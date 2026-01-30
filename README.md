@@ -12,22 +12,21 @@ Vue 3 приложение: таблица с баллами 0–10 по 10 кр
 
 Если API не запущен, при нажатии кнопки «Получить анализ…» будет ошибка **ECONNREFUSED** или **Failed to fetch** — запусти `npm run api` во втором терминале.
 
-## Деплой фронта (Vercel)
+## Деплой на Vercel (фронт + API в одном проекте)
 
-### Вариант A: через сайт Vercel
+1. Залей проект в GitHub.
+2. Зайди на [vercel.com](https://vercel.com) → **Add New… → Project** → выбери репозиторий.
+3. **Environment Variables** (перед деплоем или после в Settings):
+   - `GROQ_API_KEY` = `gsk_...` (или `OPENAI_API_KEY`)
+4. **Deploy**. Vercel сам соберёт Vite-фронт и развернёт API из папки `api/`.
+5. Готово: `https://cold-format-xxx.vercel.app`
 
-1. Залей проект в GitHub (если ещё не залит).
-2. Зайди на [vercel.com](https://vercel.com), войди через GitHub.
-3. **Add New… → Project** → выбери репозиторий → **Deploy** (Vercel подхватит Vite: `npm run build`, папка `dist`).
-4. В проекте: **Settings → Environment Variables** → добавь **VITE_API_URL** = `https://твой-api.com` (если API задеплоен отдельно). Сохрани и сделай **Redeploy**.
-
-### Вариант B: через CLI
-
-1. Установи и войди: `npx vercel login` (откроется браузер для входа).
-2. В корне проекта: `npx vercel` — превью-деплой, или `npx vercel --prod` — продакшен.
-3. Переменные окружения: в [vercel.com](https://vercel.com) → твой проект → **Settings → Environment Variables** добавь **VITE_API_URL** и сделай **Redeploy**.
-
-Готовый адрес вида `https://cold-format-xxx.vercel.app` укажи в **WEB_APP_URL** в боте для кнопки «Открыть приложение» в Telegram.
+**Через CLI:**
+```bash
+npx vercel login
+npx vercel --prod
+```
+Переменные добавь в [vercel.com](https://vercel.com) → проект → Settings → Environment Variables → Redeploy.
 
 ## Переменные окружения
 
