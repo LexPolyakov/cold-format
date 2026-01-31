@@ -15,6 +15,7 @@ const aiCardRef = ref<HTMLElement | null>(null);
 
 const analysis = computed<AnalysisResult>(() => analyzeScores(scores.value));
 const allZeros = computed(() => scores.value.every((s) => s === 0));
+const buildTime = typeof __BUILD_TIME__ !== "undefined" ? __BUILD_TIME__ : "";
 
 async function getAIAnalysis() {
   isLoading.value = true;
@@ -167,6 +168,10 @@ function setScore(i: number, e: Event) {
           <p v-for="(p, i) in aiResponse.split('\n\n')" :key="i">{{ p }}</p>
         </div>
       </div>
+
+      <p class="build-info" title="Время сборки — после redeploy должно обновиться">
+        build: {{ buildTime }}
+      </p>
     </div>
   </div>
 </template>
@@ -528,6 +533,14 @@ tr:hover {
 
 .ai-content p:last-child {
   margin-bottom: 0;
+}
+
+.build-info {
+  margin-top: 1.5rem;
+  text-align: center;
+  font-size: 0.7rem;
+  color: var(--text-dim);
+  opacity: 0.7;
 }
 
 @media (max-width: 640px) {
