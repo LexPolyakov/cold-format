@@ -52,6 +52,20 @@ async function getAIAnalysis() {
     isLoading.value = false;
   }
 }
+
+const MIN_SCORE = 0;
+const MAX_SCORE = 10;
+
+function setScore(i: number, e: Event) {
+  const raw = (e.target as HTMLInputElement).value;
+  if (raw === "") {
+    scores.value[i] = 0;
+    return;
+  }
+  const digits = raw.replace(/\D/g, "");
+  const n = digits === "" ? 0 : Math.min(MAX_SCORE, Math.max(MIN_SCORE, Number(digits)));
+  scores.value[i] = n;
+}
 </script>
 
 <template>
@@ -80,10 +94,14 @@ async function getAIAnalysis() {
               </td>
               <td class="col-value">
                 <input
-                  type="number"
+                  type="text"
+                  inputmode="numeric"
+                  pattern="[0-9]*"
                   min="0"
                   max="10"
-                  v-model.number="scores[i]"
+                  maxlength="2"
+                  :value="scores[i] === 0 ? '' : scores[i]"
+                  @input="setScore(i, $event)"
                 />
               </td>
             </tr>
@@ -318,7 +336,7 @@ tr:hover {
   text-align: center;
 }
 
-.col-value input[type="number"] {
+.col-value input {
   width: 60px;
   padding: 0.5rem;
   text-align: center;
@@ -328,9 +346,17 @@ tr:hover {
   border: 1px solid var(--border);
   border-radius: 8px;
   color: var(--teal);
+  -moz-appearance: textfield;
+  appearance: textfield;
 }
 
-.col-value input[type="number"]:focus {
+.col-value input::-webkit-inner-spin-button,
+.col-value input::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.col-value input:focus {
   outline: none;
   border-color: var(--teal);
   box-shadow: 0 0 0 2px rgba(45, 212, 191, 0.2);
