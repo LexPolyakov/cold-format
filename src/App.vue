@@ -1,11 +1,15 @@
 <script setup lang="ts">
 import { ref, computed, nextTick } from "vue";
 import {
-  criteria,
+  getCriteria,
   analyzeScores,
   buildPrompt,
   type AnalysisResult,
+  type Gender,
 } from "./composables/useScale";
+
+const gender = ref<Gender>("female");
+const criteria = computed(() => getCriteria(gender.value));
 
 const scores = ref<number[]>(Array(10).fill(0));
 const aiResponse = ref("");
@@ -13,9 +17,11 @@ const isLoading = ref(false);
 const error = ref("");
 const aiCardRef = ref<HTMLElement | null>(null);
 
-const analysis = computed<AnalysisResult>(() => analyzeScores(scores.value));
+const analysis = computed<AnalysisResult>(() =>
+  analyzeScores(scores.value, gender.value)
+);
 const allZeros = computed(() => scores.value.every((s) => s === 0));
-const buildTime = typeof __BUILD_TIME__ !== "undefined" ? __BUILD_TIME__ : "";
+// const buildTime = typeof __BUILD_TIME__ !== "undefined" ? __BUILD_TIME__ : "";
 
 async function getAIAnalysis() {
   isLoading.value = true;
@@ -36,7 +42,7 @@ async function getAIAnalysis() {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        prompt: buildPrompt(scores.value, analysis.value),
+        prompt: buildPrompt(scores.value, analysis.value, gender.value),
       }),
     });
 
@@ -64,7 +70,10 @@ function setScore(i: number, e: Event) {
     return;
   }
   const digits = raw.replace(/\D/g, "");
-  const n = digits === "" ? 0 : Math.min(MAX_SCORE, Math.max(MIN_SCORE, Number(digits)));
+  const n =
+    digits === ""
+      ? 0
+      : Math.min(MAX_SCORE, Math.max(MIN_SCORE, Number(digits)));
   scores.value[i] = n;
 }
 </script>
@@ -76,6 +85,27 @@ function setScore(i: number, e: Event) {
         <h1>COLD FORMAT <span class="by">(by Lex)</span></h1>
         <p class="subtitle">Проставь баллы от 0 до 10 по каждому критерию</p>
       </header>
+
+      <div class="gender-switch">
+        <button
+          type="button"
+          class="gender-btn"
+          :class="{ active: gender === 'female' }"
+          @click="gender = 'female'"
+          title="Женский"
+        >
+          <span class="gender-symbol female">♀</span>
+        </button>
+        <button
+          type="button"
+          class="gender-btn"
+          :class="{ active: gender === 'male' }"
+          @click="gender = 'male'"
+          title="Мужской"
+        >
+          <span class="gender-symbol male">♂</span>
+        </button>
+      </div>
 
       <div class="card table-card">
         <table>
@@ -168,10 +198,6 @@ function setScore(i: number, e: Event) {
           <p v-for="(p, i) in aiResponse.split('\n\n')" :key="i">{{ p }}</p>
         </div>
       </div>
-
-      <p class="build-info" title="Время сборки — после redeploy должно обновиться">
-        build: {{ buildTime }}
-      </p>
     </div>
   </div>
 </template>
@@ -246,8 +272,61 @@ body {
 
 .header {
   text-align: center;
-  margin-bottom: 2.5rem;
+  margin-bottom: 1.5rem;
 }
+
+.gender-switch {
+  display: flex;
+  justify-content: center;
+  gap: 0;
+  margin-bottom: 1.5rem;
+}
+
+.gender-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 52px;
+  height: 44px;
+  padding: 0;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  font-size: 1.5rem;
+  cursor: pointer;
+  transition: color 0.2s, border-color 0.2s, background 0.2s;
+}
+
+.gender-btn:first-child {
+  border-radius: 10px 0 0 10px;
+}
+
+.gender-btn:last-child {
+  border-radius: 0 10px 10px 0;
+}
+
+.gender-btn.active {
+  background: var(--teal-dim);
+  border-color: var(--teal);
+  color: var(--teal);
+}
+
+.gender-btn:not(.active):hover {
+  border-color: rgba(45, 212, 191, 0.35);
+  color: var(--text);
+}
+
+.gender-symbol.male {
+  font-weight: 700;
+}
+
+.gender-symbol.female {
+  font-weight: 700;
+}
+
+/* .gender-btn.active .gender-symbol.female {
+  color: #ec4899;
+} */
 
 h1 .by {
   font-size: 0.4em;
@@ -533,14 +612,6 @@ tr:hover {
 
 .ai-content p:last-child {
   margin-bottom: 0;
-}
-
-.build-info {
-  margin-top: 1.5rem;
-  text-align: center;
-  font-size: 0.7rem;
-  color: var(--text-dim);
-  opacity: 0.7;
 }
 
 @media (max-width: 640px) {
