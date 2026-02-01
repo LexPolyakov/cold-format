@@ -88,22 +88,20 @@ function setScore(i: number, e: Event) {
 
       <div class="gender-switch">
         <button
-          type="button"
           class="gender-btn"
           :class="{ active: gender === 'female' }"
           @click="gender = 'female'"
           title="Женский"
         >
-          <span class="gender-symbol female">♀</span>
+          <div class="gender-symbol female">♀</div>
         </button>
         <button
-          type="button"
           class="gender-btn"
           :class="{ active: gender === 'male' }"
           @click="gender = 'male'"
           title="Мужской"
         >
-          <span class="gender-symbol male">♂</span>
+          <div class="gender-symbol male">♂</div>
         </button>
       </div>
 
