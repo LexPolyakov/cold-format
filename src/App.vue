@@ -88,20 +88,31 @@ function setScore(i: number, e: Event) {
 
       <div class="gender-switch">
         <button
+          type="button"
           class="gender-btn"
           :class="{ active: gender === 'female' }"
           @click="gender = 'female'"
           title="Женский"
         >
-          <div class="gender-symbol female">♀</div>
+          <svg class="gender-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="9" r="5"/>
+            <line x1="12" y1="14" x2="12" y2="20"/>
+            <line x1="9" y1="17" x2="15" y2="17"/>
+          </svg>
         </button>
         <button
+          type="button"
           class="gender-btn"
           :class="{ active: gender === 'male' }"
           @click="gender = 'male'"
           title="Мужской"
         >
-          <div class="gender-symbol male">♂</div>
+          <svg class="gender-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="14" r="5"/>
+            <line x1="12" y1="9" x2="12" y2="2"/>
+            <line x1="9" y1="5" x2="12" y2="2"/>
+            <line x1="12" y1="2" x2="15" y2="5"/>
+          </svg>
         </button>
       </div>
 
@@ -321,13 +332,11 @@ body {
   color: var(--text);
 }
 
-.gender-symbol {
+.gender-icon {
+  width: 24px;
+  height: 24px;
   display: block;
-  line-height: 1;
-  text-align: center;
-  font-weight: 700;
-  -webkit-user-select: none;
-  user-select: none;
+  flex-shrink: 0;
 }
 
 /* .gender-btn.active .gender-symbol.female {
