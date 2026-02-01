@@ -288,13 +288,20 @@ body {
   justify-content: center;
   width: 52px;
   height: 44px;
+  min-width: 52px;
+  min-height: 44px;
   padding: 0;
+  margin: 0;
   background: var(--bg-card);
   border: 1px solid var(--border);
   color: var(--text-dim);
   font-size: 1.5rem;
   cursor: pointer;
   transition: color 0.2s, border-color 0.2s, background 0.2s;
+  -webkit-appearance: none;
+  appearance: none;
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .gender-btn:first-child {
@@ -316,12 +323,13 @@ body {
   color: var(--text);
 }
 
-.gender-symbol.male {
+.gender-symbol {
+  display: block;
+  line-height: 1;
+  text-align: center;
   font-weight: 700;
-}
-
-.gender-symbol.female {
-  font-weight: 700;
+  -webkit-user-select: none;
+  user-select: none;
 }
 
 /* .gender-btn.active .gender-symbol.female {
