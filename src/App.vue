@@ -76,6 +76,14 @@ function setScore(i: number, e: Event) {
       : Math.min(MAX_SCORE, Math.max(MIN_SCORE, Number(digits)));
   scores.value[i] = n;
 }
+
+function setGender(value: Gender) {
+  if (gender.value === value) return;
+  gender.value = value;
+  scores.value = Array(10).fill(0);
+  aiResponse.value = "";
+  error.value = "";
+}
 </script>
 
 <template>
@@ -91,7 +99,7 @@ function setScore(i: number, e: Event) {
           type="button"
           class="gender-btn"
           :class="{ active: gender === 'female' }"
-          @click="gender = 'female'"
+          @click="setGender('female')"
           title="Женский"
         >
           <svg class="gender-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -104,7 +112,7 @@ function setScore(i: number, e: Event) {
           type="button"
           class="gender-btn"
           :class="{ active: gender === 'male' }"
-          @click="gender = 'male'"
+          @click="setGender('male')"
           title="Мужской"
         >
           <svg class="gender-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
