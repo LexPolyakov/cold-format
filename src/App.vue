@@ -1,4 +1,4 @@
-<script setup lang="ts">
+<script setup lang='ts'>
 import { ref, computed, nextTick } from "vue";
 import {
   getCriteria,
@@ -59,7 +59,7 @@ const analysis = computed<AnalysisResult>(() =>
   analyzeScores(scores.value, gender.value)
 );
 const allZeros = computed(() => scores.value.every((s) => s === 0));
-// const buildTime = typeof __BUILD_TIME__ !== "undefined" ? __BUILD_TIME__ : "";
+// const buildTime = typeof __BUILD_TIME__ !== 'undefined' ? __BUILD_TIME__ : '';
 
 async function getAIAnalysis() {
   isLoading.value = true;
