@@ -9,7 +9,45 @@ import {
 } from "./composables/useScale";
 
 const gender = ref<Gender>("female");
+const activeTab = ref(1);
 const criteria = computed(() => getCriteria(gender.value));
+
+const girlFormQuestions = [
+  "Я выбираю этого человека каждый день или я просто привыкла?",
+  "Готова ли я родить от него ребёнка прямо сейчас?",
+  "Если представить, что он не изменится ни на грамм, я всё равно хочу быть с ним до конца жизни?",
+  "Я чувствую рядом с ним спокойствие или постоянное напряжение?",
+  "Мне с ним легче жить или я всё время тащу отношения на себе?",
+  "Я могу быть рядом с ним собой?",
+  "Я расту в этих отношениях?",
+  "Если бы у меня была дочь, я бы хотела для неё такого же партнёра?",
+  "Я остаюсь рядом с ним, потому что я зависима от него или потому что я действительно его люблю?",
+] as const;
+
+const boyFormQuestions = [
+  "Я с ней по своей воле или по привычке/удобству?",
+  "Готов ли я к семье и детям с ней именно сейчас?",
+  "Если она не изменится — я всё равно хочу с ней до конца?",
+  "Рядом с ней я в ресурсе или в напряге?",
+  "Я с ней строю жизнь или тащу отношения в одиночку?",
+  "Могу ли я с ней быть собой, без масок?",
+  "Я в этих отношениях расту или топчусь на месте?",
+  "Хотел бы я для своего сына такую же жену?",
+  "Я с ней из любви или из зависимости/страха остаться одному?",
+] as const;
+
+type FormAnswer = 1 | 0 | -1 | null; // Да, Не знаю, Нет
+const girlFormAnswers = ref<FormAnswer[]>(Array(9).fill(null));
+const girlAiResponse = ref("");
+const girlIsLoading = ref(false);
+const girlError = ref("");
+const girlCardRef = ref<HTMLElement | null>(null);
+
+const boyFormAnswers = ref<FormAnswer[]>(Array(9).fill(null));
+const boyAiResponse = ref("");
+const boyIsLoading = ref(false);
+const boyError = ref("");
+const boyCardRef = ref<HTMLElement | null>(null);
 
 const scores = ref<number[]>(Array(10).fill(0));
 const aiResponse = ref("");
@@ -80,10 +118,160 @@ function setScore(i: number, e: Event) {
 function setGender(value: Gender) {
   if (gender.value === value) return;
   gender.value = value;
+  resetAllForms();
+}
+
+function setTab(n: number) {
+  if (activeTab.value === n) return;
+  activeTab.value = n;
+  error.value = "";
+  girlError.value = "";
+  boyError.value = "";
+}
+
+function resetAllForms() {
   scores.value = Array(10).fill(0);
   aiResponse.value = "";
+  girlFormAnswers.value = Array(9).fill(null);
+  girlAiResponse.value = "";
+  boyFormAnswers.value = Array(9).fill(null);
+  boyAiResponse.value = "";
   error.value = "";
+  girlError.value = "";
+  boyError.value = "";
 }
+
+function setGirlAnswer(i: number, value: FormAnswer) {
+  girlFormAnswers.value[i] = value;
+}
+
+function setBoyAnswer(i: number, value: FormAnswer) {
+  boyFormAnswers.value[i] = value;
+}
+
+const formAnswerLabel = (v: FormAnswer) =>
+  v === 1 ? "Да" : v === 0 ? "Не знаю" : v === -1 ? "Нет" : "—";
+
+function buildGirlPrompt(): string {
+  const lines = girlFormQuestions.map(
+    (q, i) =>
+      `${i + 1}. ${q}\n   Ответ: ${formAnswerLabel(girlFormAnswers.value[i])}`
+  );
+  return `Рефлексия по отношениям (форма для девочек). Ответы на вопросы:
+
+${lines.join("\n\n")}
+
+Дай развёрнутый анализ (4–6 абзацев):
+1. Общая картина: что говорят ответы о качестве отношений и твоём состоянии.
+2. Сильные стороны: где ответы «Да» и что это значит.
+3. Зоны риска: «Нет» и «Не знаю» — на что обратить внимание, возможные причины.
+4. Зависимость vs любовь: как соотносятся ответы с честной привязанностью.
+5. Рекомендации: что имеет смысл обсудить с партнёром или проработать самой.`;
+}
+
+async function getGirlFormAnalysis() {
+  girlIsLoading.value = true;
+  girlError.value = "";
+  girlAiResponse.value = "";
+
+  try {
+    const apiUrl =
+      import.meta.env.VITE_API_URL ||
+      (import.meta.env.DEV
+        ? `http://${
+            typeof window !== "undefined"
+              ? window.location.hostname
+              : "localhost"
+          }:3001`
+        : "");
+    const res = await fetch(`${apiUrl}/api/analyze`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ prompt: buildGirlPrompt() }),
+    });
+
+    if (!res.ok) throw new Error(`Ошибка сервера: ${res.status}`);
+
+    const data = await res.json();
+    girlAiResponse.value = data.response;
+    await nextTick();
+    girlCardRef.value?.scrollIntoView({ behavior: "smooth", block: "start" });
+  } catch (e: any) {
+    girlError.value =
+      "Не удалось подключиться к API. Запусти в отдельном терминале: npm run api";
+  } finally {
+    girlIsLoading.value = false;
+  }
+}
+
+const girlFormHasAnswers = computed(() =>
+  girlFormAnswers.value.some((a) => a !== null)
+);
+
+function buildBoyPrompt(): string {
+  const lines = boyFormQuestions.map(
+    (q, i) =>
+      `${i + 1}. ${q}\n   Ответ: ${formAnswerLabel(boyFormAnswers.value[i])}`
+  );
+  return `Рефлексия по отношениям (форма для мальчиков). Ответы на вопросы:
+
+${lines.join("\n\n")}
+
+Дай развёрнутый анализ (4–6 абзацев):
+1. Общая картина: что говорят ответы о качестве отношений и твоём состоянии.
+2. Сильные стороны: где ответы «Да» и что это значит.
+3. Зоны риска: «Нет» и «Не знаю» — на что обратить внимание, возможные причины.
+4. Зависимость vs любовь: как соотносятся ответы с честной привязанностью.
+5. Рекомендации: что имеет смысл обсудить с партнёршей или проработать самому.`;
+}
+
+async function getBoyFormAnalysis() {
+  boyIsLoading.value = true;
+  boyError.value = "";
+  boyAiResponse.value = "";
+
+  try {
+    const apiUrl =
+      import.meta.env.VITE_API_URL ||
+      (import.meta.env.DEV
+        ? `http://${
+            typeof window !== "undefined"
+              ? window.location.hostname
+              : "localhost"
+          }:3001`
+        : "");
+    const res = await fetch(`${apiUrl}/api/analyze`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ prompt: buildBoyPrompt() }),
+    });
+
+    if (!res.ok) throw new Error(`Ошибка сервера: ${res.status}`);
+
+    const data = await res.json();
+    boyAiResponse.value = data.response;
+    await nextTick();
+    boyCardRef.value?.scrollIntoView({ behavior: "smooth", block: "start" });
+  } catch (e: any) {
+    boyError.value =
+      "Не удалось подключиться к API. Запусти в отдельном терминале: npm run api";
+  } finally {
+    boyIsLoading.value = false;
+  }
+}
+
+const boyFormHasAnswers = computed(() =>
+  boyFormAnswers.value.some((a) => a !== null)
+);
+
+const hasFormData = computed(() =>
+  scores.value.some((s) => s !== 0) ||
+  girlFormAnswers.value.some((a) => a !== null) ||
+  boyFormAnswers.value.some((a) => a !== null) ||
+  !!aiResponse.value ||
+  !!girlAiResponse.value ||
+  !!boyAiResponse.value
+);
 </script>
 
 <template>
@@ -91,130 +279,363 @@ function setGender(value: Gender) {
     <div class="container">
       <header class="header">
         <h1>COLD FORMAT <span class="by">(by Lex)</span></h1>
-        <p class="subtitle">Проставь баллы от 0 до 10 по каждому критерию</p>
       </header>
 
-      <div class="gender-switch">
-        <button
-          type="button"
-          class="gender-btn"
-          :class="{ active: gender === 'female' }"
-          @click="setGender('female')"
-          title="Женский"
-        >
-          <svg class="gender-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="12" cy="9" r="5"/>
-            <line x1="12" y1="14" x2="12" y2="20"/>
-            <line x1="9" y1="17" x2="15" y2="17"/>
-          </svg>
-        </button>
-        <button
-          type="button"
-          class="gender-btn"
-          :class="{ active: gender === 'male' }"
-          @click="setGender('male')"
-          title="Мужской"
-        >
-          <svg class="gender-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="12" cy="14" r="5"/>
-            <line x1="12" y1="9" x2="12" y2="2"/>
-            <line x1="9" y1="5" x2="12" y2="2"/>
-            <line x1="12" y1="2" x2="15" y2="5"/>
-          </svg>
-        </button>
-      </div>
-
-      <div class="card table-card">
-        <table>
-          <thead>
-            <tr>
-              <th class="col-num">№</th>
-              <th class="col-criteria">Критерий</th>
-              <th class="col-value">Оценка</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="(c, i) in criteria" :key="c.id">
-              <td class="col-num">{{ c.id }}</td>
-              <td class="col-criteria">
-                <strong>{{ c.name }}</strong>
-                <span class="desc">{{ c.description }}</span>
-              </td>
-              <td class="col-value">
-                <input
-                  type="text"
-                  inputmode="numeric"
-                  pattern="[0-9]*"
-                  min="0"
-                  max="10"
-                  maxlength="2"
-                  :value="scores[i] === 0 ? '' : scores[i]"
-                  @input="setScore(i, $event)"
-                />
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-
-      <div v-if="!allZeros" class="card result-card">
-        <div class="result-header">
-          <div class="result-item">
-            <span class="label">Сумма баллов</span>
-            <span class="value"
-              >{{ analysis.total }}<span class="max">/100</span></span
+      <div class="tabs-row">
+        <div class="tabs">
+          <button
+            type="button"
+            class="tab-btn"
+            :class="{ active: activeTab === 1 }"
+            @click="setTab(1)"
+            title="Критерии и оценка"
+          >
+            <svg
+              class="tab-icon"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
             >
+              <path
+                d="M9 5H7a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"
+              />
+              <rect x="9" y="3" width="6" height="4" rx="1" />
+              <line x1="9" y1="12" x2="15" y2="12" />
+              <line x1="9" y1="16" x2="15" y2="16" />
+            </svg>
+          </button>
+          <button
+            type="button"
+            class="tab-btn"
+            :class="{ active: activeTab === 2 }"
+            @click="setTab(2)"
+            title="Честные вопросы о партнёре"
+          >
+            <svg
+              class="tab-icon"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path
+                d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"
+              />
+            </svg>
+          </button>
+        </div>
+        <div class="gender-switch">
+          <button
+            type="button"
+            class="gender-btn"
+            :class="{ active: gender === 'female' }"
+            @click="setGender('female')"
+            title="Женский"
+          >
+            <svg
+              class="gender-icon"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <circle cx="12" cy="9" r="5" />
+              <line x1="12" y1="14" x2="12" y2="20" />
+              <line x1="9" y1="17" x2="15" y2="17" />
+            </svg>
+          </button>
+          <button
+            type="button"
+            class="gender-btn"
+            :class="{ active: gender === 'male' }"
+            @click="setGender('male')"
+            title="Мужской"
+          >
+            <svg
+              class="gender-icon"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <circle cx="12" cy="14" r="5" />
+              <line x1="12" y1="9" x2="12" y2="2" />
+              <line x1="9" y1="5" x2="12" y2="2" />
+              <line x1="12" y1="2" x2="15" y2="5" />
+            </svg>
+          </button>
+        </div>
+        <button
+          type="button"
+          class="reset-all-btn"
+          :disabled="!hasFormData"
+          @click="resetAllForms"
+          title="Сбросить все формы"
+        >
+          <svg
+            class="tab-icon"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+            <path d="M3 3v5h5" />
+          </svg>
+        </button>
+      </div>
+
+      <template v-if="activeTab === 1">
+        <div class="card table-card">
+          <p class="form-intro">
+            Проставь баллы от 0 до 10 по каждому критерию
+          </p>
+          <table>
+            <thead>
+              <tr>
+                <th class="col-criteria">Критерий</th>
+                <th class="col-value">Оценка</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="(c, i) in criteria" :key="c.id">
+                <td class="col-criteria">
+                  <strong>{{ c.name }}</strong>
+                  <span class="desc">{{ c.description }}</span>
+                </td>
+                <td class="col-value">
+                  <input
+                    type="text"
+                    inputmode="numeric"
+                    pattern="[0-9]*"
+                    min="0"
+                    max="10"
+                    maxlength="2"
+                    :value="scores[i] === 0 ? '' : scores[i]"
+                    @input="setScore(i, $event)"
+                  />
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div v-if="!allZeros" class="card result-card">
+          <div class="result-header">
+            <div class="result-item">
+              <span class="label">Сумма баллов</span>
+              <span class="value"
+                >{{ analysis.total }}<span class="max">/100</span></span
+              >
+            </div>
+            <div class="result-item">
+              <span class="label">Категория</span>
+              <span class="category" :class="analysis.categoryClass">{{
+                analysis.category
+              }}</span>
+            </div>
           </div>
-          <div class="result-item">
-            <span class="label">Категория</span>
-            <span class="category" :class="analysis.categoryClass">{{
-              analysis.category
-            }}</span>
+
+          <p class="description">{{ analysis.description }}</p>
+
+          <div v-if="analysis.penalty" class="alert alert-danger">
+            <span class="alert-icon">⚠️</span>
+            {{ analysis.penalty }}
+          </div>
+
+          <div v-if="analysis.redFlags.length" class="alert alert-warning">
+            <span class="alert-icon">🚩</span>
+            Красные флаги: низкие баллы по пунктам
+            {{ analysis.redFlags.join(", ") }} (≤3)
+          </div>
+
+          <div v-if="analysis.isGoldenStandard" class="alert alert-success">
+            <span class="alert-icon">⭐</span>
+            Золотой стандарт: 75+ баллов и ни одного пункта ниже 6
           </div>
         </div>
 
-        <p class="description">{{ analysis.description }}</p>
+        <button
+          @click="getAIAnalysis"
+          :disabled="isLoading || allZeros"
+          class="btn-primary"
+        >
+          <span class="btn-glow"></span>
+          {{ isLoading ? "Анализирую..." : "Получить анализ и стратегию" }}
+        </button>
 
-        <div v-if="analysis.penalty" class="alert alert-danger">
-          <span class="alert-icon">⚠️</span>
-          {{ analysis.penalty }}
+        <div v-if="error" class="alert alert-danger" style="margin-top: 1rem">
+          <span class="alert-icon">❌</span>
+          {{ error }}
         </div>
 
-        <div v-if="analysis.redFlags.length" class="alert alert-warning">
-          <span class="alert-icon">🚩</span>
-          Красные флаги: низкие баллы по пунктам
-          {{ analysis.redFlags.join(", ") }} (≤3)
+        <div v-if="aiResponse" ref="aiCardRef" class="card ai-card">
+          <h3>
+            <span class="icon">✨</span>
+            Анализ
+          </h3>
+          <div class="ai-content">
+            <p v-for="(p, i) in aiResponse.split('\n\n')" :key="i">{{ p }}</p>
+          </div>
+        </div>
+      </template>
+
+      <template v-if="activeTab === 2">
+        <div v-if="gender === 'female'" class="card form-card">
+          <p class="form-intro">Честные вопросы себе о партнёре</p>
+          <div
+            v-for="(q, i) in girlFormQuestions"
+            :key="'g-' + i"
+            class="form-item"
+          >
+            <p class="form-question">{{ q }}</p>
+            <div class="form-options">
+              <button
+                type="button"
+                class="option-btn"
+                :class="{ active: girlFormAnswers[i] === 1 }"
+                @click="setGirlAnswer(i, 1)"
+              >
+                Да
+              </button>
+              <button
+                type="button"
+                class="option-btn"
+                :class="{ active: girlFormAnswers[i] === 0 }"
+                @click="setGirlAnswer(i, 0)"
+              >
+                Не знаю
+              </button>
+              <button
+                type="button"
+                class="option-btn"
+                :class="{ active: girlFormAnswers[i] === -1 }"
+                @click="setGirlAnswer(i, -1)"
+              >
+                Нет
+              </button>
+            </div>
+          </div>
+
+          <button
+            @click="getGirlFormAnalysis"
+            :disabled="girlIsLoading || !girlFormHasAnswers"
+            class="btn-primary"
+          >
+            <span class="btn-glow"></span>
+            {{
+              girlIsLoading ? "Анализирую..." : "Получить развёрнутый анализ"
+            }}
+          </button>
+
+          <div
+            v-if="girlError"
+            class="alert alert-danger"
+            style="margin-top: 1rem"
+          >
+            <span class="alert-icon">❌</span>
+            {{ girlError }}
+          </div>
+
+          <div
+            v-if="girlAiResponse"
+            ref="girlCardRef"
+            class="card ai-card ai-card"
+          >
+            <h3>
+              <span class="icon">✨</span>
+              Развёрнутый анализ
+            </h3>
+            <div class="ai-content">
+              <p v-for="(p, i) in girlAiResponse.split('\n\n')" :key="i">
+                {{ p }}
+              </p>
+            </div>
+          </div>
         </div>
 
-        <div v-if="analysis.isGoldenStandard" class="alert alert-success">
-          <span class="alert-icon">⭐</span>
-          Золотой стандарт: 75+ баллов и ни одного пункта ниже 6
+        <div v-if="gender === 'male'" class="card form-card">
+          <p class="form-intro">Честные вопросы себе о партнёрше</p>
+          <div
+            v-for="(q, i) in boyFormQuestions"
+            :key="'b-' + i"
+            class="form-item"
+          >
+            <p class="form-question">{{ q }}</p>
+            <div class="form-options">
+              <button
+                type="button"
+                class="option-btn"
+                :class="{ active: boyFormAnswers[i] === 1 }"
+                @click="setBoyAnswer(i, 1)"
+              >
+                Да
+              </button>
+              <button
+                type="button"
+                class="option-btn"
+                :class="{ active: boyFormAnswers[i] === 0 }"
+                @click="setBoyAnswer(i, 0)"
+              >
+                Не знаю
+              </button>
+              <button
+                type="button"
+                class="option-btn"
+                :class="{ active: boyFormAnswers[i] === -1 }"
+                @click="setBoyAnswer(i, -1)"
+              >
+                Нет
+              </button>
+            </div>
+          </div>
+
+          <button
+            @click="getBoyFormAnalysis"
+            :disabled="boyIsLoading || !boyFormHasAnswers"
+            class="btn-primary"
+          >
+            <span class="btn-glow"></span>
+            {{ boyIsLoading ? "Анализирую..." : "Получить развёрнутый анализ" }}
+          </button>
+
+          <div
+            v-if="boyError"
+            class="alert alert-danger"
+            style="margin-top: 1rem"
+          >
+            <span class="alert-icon">❌</span>
+            {{ boyError }}
+          </div>
+
+          <div
+            v-if="boyAiResponse"
+            ref="boyCardRef"
+            class="card ai-card ai-card"
+          >
+            <h3>
+              <span class="icon">✨</span>
+              Развёрнутый анализ
+            </h3>
+            <div class="ai-content">
+              <p v-for="(p, i) in boyAiResponse.split('\n\n')" :key="i">
+                {{ p }}
+              </p>
+            </div>
+          </div>
         </div>
-      </div>
-
-      <button
-        @click="getAIAnalysis"
-        :disabled="isLoading || allZeros"
-        class="btn-primary"
-      >
-        <span class="btn-glow"></span>
-        {{ isLoading ? "Анализирую..." : "Получить анализ и стратегию" }}
-      </button>
-
-      <div v-if="error" class="alert alert-danger" style="margin-top: 1rem">
-        <span class="alert-icon">❌</span>
-        {{ error }}
-      </div>
-
-      <div v-if="aiResponse" ref="aiCardRef" class="card ai-card">
-        <h3>
-          <span class="icon">✨</span>
-          Анализ
-        </h3>
-        <div class="ai-content">
-          <p v-for="(p, i) in aiResponse.split('\n\n')" :key="i">{{ p }}</p>
-        </div>
-      </div>
+      </template>
     </div>
   </div>
 </template>
@@ -232,6 +653,9 @@ function setGender(value: Gender) {
   --teal: #2dd4bf;
   --teal-dim: rgba(45, 212, 191, 0.15);
   --teal-glow: rgba(45, 212, 191, 0.4);
+  --reset-pink: #e02f7d;
+  --reset-pink-dim: rgba(224, 47, 125, 0.2);
+  --reset-pink-disabled: #f7a8b8;
   --bg-dark: #09090b;
   --bg-card: rgba(20, 20, 22, 0.9);
   --border: rgba(45, 212, 191, 0.15);
@@ -292,11 +716,162 @@ body {
   margin-bottom: 1.5rem;
 }
 
+.tabs-row {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.tabs {
+  display: flex;
+  gap: 0;
+}
+
+.tab-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0;
+  margin: 0;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  font-size: 1.25rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: color 0.2s, border-color 0.2s, background 0.2s;
+  -webkit-appearance: none;
+  appearance: none;
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.tab-btn:first-child {
+  border-radius: 10px 0 0 10px;
+}
+
+.tab-btn:last-child {
+  border-radius: 0 10px 10px 0;
+}
+
+.tab-btn.active {
+  background: var(--teal-dim);
+  border-color: var(--teal);
+  color: var(--teal);
+}
+
+.tab-btn:not(.active):hover {
+  border-color: rgba(45, 212, 191, 0.35);
+  color: var(--text);
+}
+
+.tab-icon {
+  width: 22px;
+  height: 22px;
+  display: block;
+  flex-shrink: 0;
+}
+
+.reset-all-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-left: auto;
+  padding: 0.5rem 1rem;
+  background: var(--bg-card);
+  border: 1px solid var(--reset-pink);
+  border-radius: 10px;
+  color: var(--reset-pink);
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: color 0.2s, border-color 0.2s, background 0.2s;
+  -webkit-appearance: none;
+  appearance: none;
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.reset-all-btn:hover:not(:disabled) {
+  background: var(--reset-pink-dim);
+  border-color: var(--reset-pink);
+  color: var(--reset-pink);
+}
+
+.reset-all-btn:disabled {
+  border-color: var(--reset-pink-disabled);
+  color: var(--reset-pink-disabled);
+  opacity: 0.8;
+  cursor: not-allowed;
+}
+
 .gender-switch {
   display: flex;
-  justify-content: center;
   gap: 0;
+}
+
+.form-card {
   margin-bottom: 1.5rem;
+}
+
+.form-intro {
+  text-align: center;
+  color: var(--text-dim);
+  font-size: 0.9rem;
+  margin-bottom: 1.5rem;
+}
+
+.form-item {
+  padding: 1rem 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.form-item:last-child {
+  border-bottom: none;
+}
+
+.form-question {
+  color: var(--text);
+  font-size: 1rem;
+  line-height: 1.5;
+  margin-bottom: 0.75rem;
+}
+
+.form-options {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.option-btn {
+  padding: 0.4rem 0.75rem;
+  font-size: 0.85rem;
+  background: var(--bg-dark);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text-dim);
+  cursor: pointer;
+  transition: color 0.2s, border-color 0.2s, background 0.2s;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.option-btn.active {
+  background: var(--teal-dim);
+  border-color: var(--teal);
+  color: var(--teal);
+}
+
+.option-btn:not(.active):hover {
+  border-color: rgba(45, 212, 191, 0.35);
+  color: var(--text);
 }
 
 .gender-btn {
@@ -415,13 +990,6 @@ tr:last-child td {
 }
 tr:hover {
   background: rgba(45, 212, 191, 0.03);
-}
-
-.col-num {
-  width: 50px;
-  text-align: center;
-  color: var(--teal);
-  font-weight: 600;
 }
 
 .col-criteria strong {
@@ -640,10 +1208,6 @@ tr:hover {
 @media (max-width: 640px) {
   h1 {
     font-size: 1.75rem;
-  }
-  .col-num,
-  th.col-num {
-    display: none;
   }
   .col-value {
     width: 80px;
