@@ -101,17 +101,27 @@ async function getAIAnalysis() {
 const MIN_SCORE = 0;
 const MAX_SCORE = 10;
 
+function allowOnlyDigits(e: KeyboardEvent) {
+  if (
+    /[0-9]/.test(e.key) ||
+    e.key === "Backspace" ||
+    e.key === "Delete" ||
+    e.key === "Tab" ||
+    e.key.startsWith("Arrow") ||
+    e.key === "Home" ||
+    e.key === "End"
+  )
+    return;
+  e.preventDefault();
+}
+
 function setScore(i: number, e: Event) {
-  const raw = (e.target as HTMLInputElement).value;
+  const raw = (e.target as HTMLInputElement).value.replace(/\D/g, "");
   if (raw === "") {
     scores.value[i] = 0;
     return;
   }
-  const digits = raw.replace(/\D/g, "");
-  const n =
-    digits === ""
-      ? 0
-      : Math.min(MAX_SCORE, Math.max(MIN_SCORE, Number(digits)));
+  const n = Math.min(MAX_SCORE, Math.max(MIN_SCORE, Number(raw)));
   scores.value[i] = n;
 }
 
@@ -264,13 +274,14 @@ const boyFormHasAnswers = computed(() =>
   boyFormAnswers.value.some((a) => a !== null)
 );
 
-const hasFormData = computed(() =>
-  scores.value.some((s) => s !== 0) ||
-  girlFormAnswers.value.some((a) => a !== null) ||
-  boyFormAnswers.value.some((a) => a !== null) ||
-  !!aiResponse.value ||
-  !!girlAiResponse.value ||
-  !!boyAiResponse.value
+const hasFormData = computed(
+  () =>
+    scores.value.some((s) => s !== 0) ||
+    girlFormAnswers.value.some((a) => a !== null) ||
+    boyFormAnswers.value.some((a) => a !== null) ||
+    !!aiResponse.value ||
+    !!girlAiResponse.value ||
+    !!boyAiResponse.value
 );
 </script>
 
@@ -423,6 +434,7 @@ const hasFormData = computed(() =>
                     max="10"
                     maxlength="2"
                     :value="scores[i] === 0 ? '' : scores[i]"
+                    @keydown="allowOnlyDigits"
                     @input="setScore(i, $event)"
                   />
                 </td>
@@ -472,7 +484,7 @@ const hasFormData = computed(() =>
           class="btn-primary"
         >
           <span class="btn-glow"></span>
-          {{ isLoading ? "Анализирую..." : "Получить анализ и стратегию" }}
+          {{ isLoading ? "Анализирую..." : "Анализировать" }}
         </button>
 
         <div v-if="error" class="alert alert-danger" style="margin-top: 1rem">
@@ -527,41 +539,40 @@ const hasFormData = computed(() =>
               </button>
             </div>
           </div>
+        </div>
 
-          <button
-            @click="getGirlFormAnalysis"
-            :disabled="girlIsLoading || !girlFormHasAnswers"
-            class="btn-primary"
-          >
-            <span class="btn-glow"></span>
-            {{
-              girlIsLoading ? "Анализирую..." : "Получить развёрнутый анализ"
-            }}
-          </button>
+        <button
+          v-if="gender === 'female'"
+          @click="getGirlFormAnalysis"
+          :disabled="girlIsLoading || !girlFormHasAnswers"
+          class="btn-primary"
+        >
+          <span class="btn-glow"></span>
+          {{ girlIsLoading ? "Анализирую..." : "Анализировать" }}
+        </button>
 
-          <div
-            v-if="girlError"
-            class="alert alert-danger"
-            style="margin-top: 1rem"
-          >
-            <span class="alert-icon">❌</span>
-            {{ girlError }}
-          </div>
+        <div
+          v-if="gender === 'female' && girlError"
+          class="alert alert-danger"
+          style="margin-top: 1rem"
+        >
+          <span class="alert-icon">❌</span>
+          {{ girlError }}
+        </div>
 
-          <div
-            v-if="girlAiResponse"
-            ref="girlCardRef"
-            class="card ai-card ai-card"
-          >
-            <h3>
-              <span class="icon">✨</span>
-              Развёрнутый анализ
-            </h3>
-            <div class="ai-content">
-              <p v-for="(p, i) in girlAiResponse.split('\n\n')" :key="i">
-                {{ p }}
-              </p>
-            </div>
+        <div
+          v-if="gender === 'female' && girlAiResponse"
+          ref="girlCardRef"
+          class="card ai-card"
+        >
+          <h3>
+            <span class="icon">✨</span>
+            Развёрнутый анализ
+          </h3>
+          <div class="ai-content">
+            <p v-for="(p, i) in girlAiResponse.split('\n\n')" :key="i">
+              {{ p }}
+            </p>
           </div>
         </div>
 
@@ -600,39 +611,40 @@ const hasFormData = computed(() =>
               </button>
             </div>
           </div>
+        </div>
 
-          <button
-            @click="getBoyFormAnalysis"
-            :disabled="boyIsLoading || !boyFormHasAnswers"
-            class="btn-primary"
-          >
-            <span class="btn-glow"></span>
-            {{ boyIsLoading ? "Анализирую..." : "Получить развёрнутый анализ" }}
-          </button>
+        <button
+          v-if="gender === 'male'"
+          @click="getBoyFormAnalysis"
+          :disabled="boyIsLoading || !boyFormHasAnswers"
+          class="btn-primary"
+        >
+          <span class="btn-glow"></span>
+          {{ boyIsLoading ? "Анализирую..." : "Анализировать" }}
+        </button>
 
-          <div
-            v-if="boyError"
-            class="alert alert-danger"
-            style="margin-top: 1rem"
-          >
-            <span class="alert-icon">❌</span>
-            {{ boyError }}
-          </div>
+        <div
+          v-if="gender === 'male' && boyError"
+          class="alert alert-danger"
+          style="margin-top: 1rem"
+        >
+          <span class="alert-icon">❌</span>
+          {{ boyError }}
+        </div>
 
-          <div
-            v-if="boyAiResponse"
-            ref="boyCardRef"
-            class="card ai-card ai-card"
-          >
-            <h3>
-              <span class="icon">✨</span>
-              Развёрнутый анализ
-            </h3>
-            <div class="ai-content">
-              <p v-for="(p, i) in boyAiResponse.split('\n\n')" :key="i">
-                {{ p }}
-              </p>
-            </div>
+        <div
+          v-if="gender === 'male' && boyAiResponse"
+          ref="boyCardRef"
+          class="card ai-card"
+        >
+          <h3>
+            <span class="icon">✨</span>
+            Развёрнутый анализ
+          </h3>
+          <div class="ai-content">
+            <p v-for="(p, i) in boyAiResponse.split('\n\n')" :key="i">
+              {{ p }}
+            </p>
           </div>
         </div>
       </template>
