@@ -33,7 +33,7 @@ const criteriaMale: Criterion[] = [
 ]
 
 export function getCriteria(gender: Gender): Criterion[] {
-  return gender === 'male' ? criteriaMale : criteriaFemale
+  return gender === 'male' ? criteriaFemale : criteriaMale
 }
 
 export interface AnalysisResult {
