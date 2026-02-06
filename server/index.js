@@ -1,9 +1,12 @@
 import http from 'http'
 import { config } from 'dotenv'
+import { Resend } from 'resend'
 
 config()
 
 const GROQ_KEY = process.env.GROQ_API_KEY
+const RESEND_KEY = process.env.RESEND_API_KEY
+const FEEDBACK_TO = 'alexey.polyakov123@gmail.com'
 const OPENAI_KEY = process.env.OPENAI_API_KEY
 
 const PORT = process.env.PORT || 3001
@@ -55,6 +58,37 @@ const server = http.createServer(async (req, res) => {
   if (req.method === 'OPTIONS') {
     res.writeHead(204)
     return res.end()
+  }
+
+  if (req.method === 'POST' && req.url === '/api/feedback') {
+    let body = ''
+    req.on('data', chunk => body += chunk)
+    req.on('end', async () => {
+      try {
+        const { text } = JSON.parse(body || '{}')
+        if (!RESEND_KEY) {
+          res.writeHead(500, { 'Content-Type': 'application/json' })
+          return res.end(JSON.stringify({ error: 'RESEND_API_KEY not set' }))
+        }
+        const resend = new Resend(RESEND_KEY)
+        const { data, error } = await resend.emails.send({
+          from: 'Cold Format <onboarding@resend.dev>',
+          to: [FEEDBACK_TO],
+          subject: 'Обратная связь — Cold Format',
+          text: (text && String(text).trim()) || '(пусто)'
+        })
+        if (error) {
+          res.writeHead(500, { 'Content-Type': 'application/json' })
+          return res.end(JSON.stringify({ error: error.message }))
+        }
+        res.writeHead(200, { 'Content-Type': 'application/json' })
+        res.end(JSON.stringify({ ok: true, id: data?.id }))
+      } catch (e) {
+        res.writeHead(500, { 'Content-Type': 'application/json' })
+        res.end(JSON.stringify({ error: e.message }))
+      }
+    })
+    return
   }
 
   if (req.method === 'POST' && req.url === '/api/analyze') {

@@ -18,6 +18,7 @@ Vue 3 приложение: таблица с баллами 0–10 по 10 кр
 2. Зайди на [vercel.com](https://vercel.com) → **Add New… → Project** → выбери репозиторий.
 3. **Environment Variables** (перед деплоем или после в Settings):
    - `GROQ_API_KEY` = `gsk_...` (или `OPENAI_API_KEY`)
+   - `RESEND_API_KEY` = `re_...` (для кнопки «Обратная связь»)
 4. **Deploy**. Vercel сам соберёт Vite-фронт и развернёт API из папки `api/`.
 5. Готово: `https://cold-format-xxx.vercel.app`
 
@@ -32,8 +33,9 @@ npx vercel --prod
 
 - **GROQ_API_KEY** (рекомендуется) — бесплатный ключ Groq. Регистрация: [console.groq.com/keys](https://console.groq.com/keys). Без карты, есть лимиты.
 - **OPENAI_API_KEY** — ключ OpenAI (платный после исчерпания кредитов).
+- **RESEND_API_KEY** — для кнопки «Обратная связь»: письма отправляются на alexey.polyakov123@gmail.com через [Resend](https://resend.com). Ключ: [resend.com/api-keys](https://resend.com/api-keys). Без ключа отправка обратной связи не работает.
 - Приоритет: если задан `GROQ_API_KEY`, используется Groq; иначе — OpenAI.
-- Файл **.env** в корне или **server/.env**: `GROQ_API_KEY=gsk_...` или `OPENAI_API_KEY=sk_...`. После изменения перезапусти API.
+- Файл **.env** в корне или **server/.env**: `GROQ_API_KEY=gsk_...`, `OPENAI_API_KEY=sk_...`, `RESEND_API_KEY=re_...`. После изменения перезапусти API.
 
 ## Логика
 

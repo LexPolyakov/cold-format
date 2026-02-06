@@ -12,44 +12,135 @@ const gender = ref<Gender>("female");
 const activeTab = ref(1);
 const criteria = computed(() => getCriteria(gender.value));
 
-const girlFormQuestions = [
-  "Я выбираю этого человека каждый день или я просто привыкла?",
-  "Готова ли я родить от него ребёнка прямо сейчас?",
-  "Если представить, что он не изменится ни на грамм, я всё равно хочу быть с ним до конца жизни?",
-  "Я чувствую рядом с ним спокойствие или постоянное напряжение?",
-  "Мне с ним легче жить или я всё время тащу отношения на себе?",
-  "Я могу быть рядом с ним собой?",
-  "Я расту в этих отношениях?",
-  "Если бы у меня была дочь, я бы хотела для неё такого же партнёра?",
-  "Я остаюсь рядом с ним, потому что я зависима от него или потому что я действительно его люблю?",
-] as const;
+interface FormQuestion {
+  text: string;
+  options: [string, string, string]; // положительный (1), нейтральный (0), отрицательный (-1)
+}
 
-const boyFormQuestions = [
-  "Я с ней по своей воле или по привычке/удобству?",
-  "Готов ли я к семье и детям с ней именно сейчас?",
-  "Если она не изменится — я всё равно хочу с ней до конца?",
-  "Рядом с ней я в ресурсе или в напряге?",
-  "Я с ней строю жизнь или тащу отношения в одиночку?",
-  "Могу ли я с ней быть собой, без масок?",
-  "Я в этих отношениях расту или топчусь на месте?",
-  "Хотел бы я для своего сына такую же жену?",
-  "Я с ней из любви или из зависимости/страха остаться одному?",
-] as const;
+const girlFormQuestions: FormQuestion[] = [
+  {
+    text: "Моё нахождение в этих отношениях — это осознанный ежедневный выбор или привычка и рутина?",
+    options: ["Выбор", "Не знаю", "Привычка"],
+  },
+  {
+    text: "Вижу ли я этого человека отцом своих будущих детей (в перспективе)?",
+    options: ["Да", "Не знаю", "Нет"],
+  },
+  {
+    text: "Если представить, что он не изменится ни на грамм, я всё равно хочу быть с ним до конца жизни?",
+    options: ["Да", "Не знаю", "Нет"],
+  },
+  {
+    text: "Что я чувствую рядом с ним чаще всего?",
+    options: [
+      "Спокойствие и безопасность",
+      "Затрудняюсь ответить",
+      "Напряжение и тревогу",
+    ],
+  },
+  {
+    text: "В наших отношениях я чувствую поддержку и плечо рядом или мне приходится «тащить всё на себе»?",
+    options: ["Поддержку", "Не знаю", "Тащу на себе"],
+  },
+  {
+    text: "Могу ли я быть рядом с ним полностью собой, не играя роли?",
+    options: ["Да", "Частично", "Нет"],
+  },
+  {
+    text: "Расту ли я как личность в этих отношениях (развиваюсь, узнаю новое, становлюсь лучше)?",
+    options: [
+      "Да",
+      "Отношения не влияют на рост",
+      "Нет, я деградирую или стою на месте",
+    ],
+  },
+  {
+    text: "Если бы у меня была дочь, желала бы я для неё таких же отношений с таким партнёром?",
+    options: ["Да", "Не знаю", "Нет"],
+  },
+  {
+    text: "Уважаю ли я этого человека (его ум, поступки, жизненную позицию)?",
+    options: ["Да", "Не знаю", "Нет"],
+  },
+  {
+    text: "Поддерживает ли он мои цели и мечты, радуется ли моим успехам?",
+    options: ["Да", "Иногда", "Нет"],
+  },
+  {
+    text: "Если бы завтра исчезли все внешние обстоятельства (страх одиночества, общий быт, мнение окружающих), выбрала бы я его снова?",
+    options: ["Да, однозначно", "Не знаю", "Нет"],
+  },
+];
+
+const boyFormQuestions: FormQuestion[] = [
+  {
+    text: "Моё нахождение в этих отношениях — это осознанный ежедневный выбор или привычка и рутина?",
+    options: ["Выбор", "Не знаю", "Привычка"],
+  },
+  {
+    text: "Вижу ли я эту женщину матерью своих будущих детей (в перспективе)?",
+    options: ["Да", "Не знаю", "Нет"],
+  },
+  {
+    text: "Если представить, что она не изменится ни на грамм, я всё равно хочу быть с ней до конца жизни?",
+    options: ["Да", "Не знаю", "Нет"],
+  },
+  {
+    text: "Что я чувствую рядом с ней чаще всего?",
+    options: [
+      "Ресурс и спокойствие",
+      "Затрудняюсь ответить",
+      "Напряжение и тревогу",
+    ],
+  },
+  {
+    text: "В наших отношениях я чувствую поддержку и плечо рядом или мне приходится «тащить всё на себе»?",
+    options: ["Поддержку", "Не знаю", "Тащу на себе"],
+  },
+  {
+    text: "Могу ли я быть рядом с ней полностью собой, не играя роли?",
+    options: ["Да", "Частично", "Нет"],
+  },
+  {
+    text: "Расту ли я как личность в этих отношениях (развиваюсь, узнаю новое, становлюсь лучше)?",
+    options: [
+      "Да",
+      "Отношения не влияют на рост",
+      "Нет, деградирую или стою на месте",
+    ],
+  },
+  {
+    text: "Если бы у меня был сын, желал бы я для него таких же отношений с такой партнёршей?",
+    options: ["Да", "Не знаю", "Нет"],
+  },
+  {
+    text: "Уважаю ли я эту женщину (её ум, поступки, жизненную позицию)?",
+    options: ["Да", "Не знаю", "Нет"],
+  },
+  {
+    text: "Поддерживает ли она мои цели и мечты, радуется ли моим успехам?",
+    options: ["Да", "Иногда", "Нет"],
+  },
+  {
+    text: "Если бы завтра исчезли все внешние обстоятельства (страх одиночества, общий быт, мнение окружающих), выбрал бы я её снова?",
+    options: ["Да, однозначно", "Не знаю", "Нет"],
+  },
+];
 
 type FormAnswer = 1 | 0 | -1 | null; // Да, Не знаю, Нет
-const girlFormAnswers = ref<FormAnswer[]>(Array(9).fill(null));
+const girlFormAnswers = ref<FormAnswer[]>(Array(11).fill(null));
 const girlAiResponse = ref("");
 const girlIsLoading = ref(false);
 const girlError = ref("");
 const girlCardRef = ref<HTMLElement | null>(null);
 
-const boyFormAnswers = ref<FormAnswer[]>(Array(9).fill(null));
+const boyFormAnswers = ref<FormAnswer[]>(Array(11).fill(null));
 const boyAiResponse = ref("");
 const boyIsLoading = ref(false);
 const boyError = ref("");
 const boyCardRef = ref<HTMLElement | null>(null);
 
-const scores = ref<number[]>(Array(10).fill(0));
+const scores = ref<number[]>(Array(11).fill(0));
 const aiResponse = ref("");
 const isLoading = ref(false);
 const error = ref("");
@@ -140,11 +231,11 @@ function setTab(n: number) {
 }
 
 function resetAllForms() {
-  scores.value = Array(10).fill(0);
+  scores.value = Array(11).fill(0);
   aiResponse.value = "";
-  girlFormAnswers.value = Array(9).fill(null);
+  girlFormAnswers.value = Array(11).fill(null);
   girlAiResponse.value = "";
-  boyFormAnswers.value = Array(9).fill(null);
+  boyFormAnswers.value = Array(11).fill(null);
   boyAiResponse.value = "";
   error.value = "";
   girlError.value = "";
@@ -162,10 +253,19 @@ function setBoyAnswer(i: number, value: FormAnswer) {
 const formAnswerLabel = (v: FormAnswer) =>
   v === 1 ? "Да" : v === 0 ? "Не знаю" : v === -1 ? "Нет" : "—";
 
+function getGirlOptionLabel(i: number, v: FormAnswer): string {
+  if (v === null) return "—";
+  const o = girlFormQuestions[i].options;
+  return v === 1 ? o[0] : v === 0 ? o[1] : o[2];
+}
+
 function buildGirlPrompt(): string {
   const lines = girlFormQuestions.map(
     (q, i) =>
-      `${i + 1}. ${q}\n   Ответ: ${formAnswerLabel(girlFormAnswers.value[i])}`
+      `${i + 1}. ${q.text}\n   Ответ: ${getGirlOptionLabel(
+        i,
+        girlFormAnswers.value[i]
+      )}`
   );
   return `Рефлексия по отношениям (форма для девочек). Ответы на вопросы:
 
@@ -218,10 +318,19 @@ const girlFormHasAnswers = computed(() =>
   girlFormAnswers.value.some((a) => a !== null)
 );
 
+function getBoyOptionLabel(i: number, v: FormAnswer): string {
+  if (v === null) return "—";
+  const o = boyFormQuestions[i].options;
+  return v === 1 ? o[0] : v === 0 ? o[1] : o[2];
+}
+
 function buildBoyPrompt(): string {
   const lines = boyFormQuestions.map(
     (q, i) =>
-      `${i + 1}. ${q}\n   Ответ: ${formAnswerLabel(boyFormAnswers.value[i])}`
+      `${i + 1}. ${q.text}\n   Ответ: ${getBoyOptionLabel(
+        i,
+        boyFormAnswers.value[i]
+      )}`
   );
   return `Рефлексия по отношениям (форма для мальчиков). Ответы на вопросы:
 
@@ -283,68 +392,161 @@ const hasFormData = computed(
     !!girlAiResponse.value ||
     !!boyAiResponse.value
 );
+
+const showFeedbackModal = ref(false);
+const feedbackText = ref("");
+const feedbackSending = ref(false);
+const feedbackError = ref("");
+
+function openFeedbackModal() {
+  showFeedbackModal.value = true;
+  feedbackText.value = "";
+  feedbackError.value = "";
+}
+
+function closeFeedbackModal() {
+  showFeedbackModal.value = false;
+  feedbackText.value = "";
+  feedbackError.value = "";
+}
+
+async function sendFeedback() {
+  feedbackSending.value = true;
+  feedbackError.value = "";
+  const apiBase =
+    (typeof import.meta !== "undefined" &&
+      (import.meta as any).env?.VITE_API_URL) ||
+    "";
+  try {
+    const res = await fetch(`${apiBase}/api/feedback`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text: feedbackText.value.trim() || "" }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      feedbackError.value = data.error || `Ошибка: ${res.status}`;
+      return;
+    }
+    closeFeedbackModal();
+  } catch {
+    feedbackError.value =
+      "Не удалось отправить. Запусти API: npm run api и добавь RESEND_API_KEY в .env";
+  } finally {
+    feedbackSending.value = false;
+  }
+}
 </script>
 
 <template>
   <div class="app">
     <div class="container">
       <header class="header">
-        <h1>COLD FORMAT <span class="by">(by Lex)</span></h1>
+        <h1>COLD FORMAT <span class="by">(by LexSola)</span></h1>
       </header>
 
       <div class="tabs-row">
-        <div class="gender-switch">
-          <button
-            type="button"
-            class="gender-btn"
-            :class="{ active: gender === 'female' }"
-            @click="setGender('female')"
-            title="Женский"
-          >
-            <svg
-              class="gender-icon"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
+        <div class="tabs-container">
+          <div class="gender-switch">
+            <button
+              type="button"
+              class="gender-btn"
+              :class="{ active: gender === 'female' }"
+              @click="setGender('female')"
+              title="Женский"
             >
-              <circle cx="12" cy="9" r="5" />
-              <line x1="12" y1="14" x2="12" y2="20" />
-              <line x1="9" y1="17" x2="15" y2="17" />
-            </svg>
-          </button>
-          <button
-            type="button"
-            class="gender-btn"
-            :class="{ active: gender === 'male' }"
-            @click="setGender('male')"
-            title="Мужской"
-          >
-            <svg
-              class="gender-icon"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
+              <svg
+                class="gender-icon"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <circle cx="12" cy="9" r="5" />
+                <line x1="12" y1="14" x2="12" y2="20" />
+                <line x1="9" y1="17" x2="15" y2="17" />
+              </svg>
+            </button>
+            <button
+              type="button"
+              class="gender-btn"
+              :class="{ active: gender === 'male' }"
+              @click="setGender('male')"
+              title="Мужской"
             >
-              <circle cx="12" cy="14" r="5" />
-              <line x1="12" y1="9" x2="12" y2="2" />
-              <line x1="9" y1="5" x2="12" y2="2" />
-              <line x1="12" y1="2" x2="15" y2="5" />
-            </svg>
-          </button>
+              <svg
+                class="gender-icon"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <circle cx="12" cy="14" r="5" />
+                <line x1="12" y1="9" x2="12" y2="2" />
+                <line x1="9" y1="5" x2="12" y2="2" />
+                <line x1="12" y1="2" x2="15" y2="5" />
+              </svg>
+            </button>
+          </div>
+          <div class="tabs">
+            <button
+              type="button"
+              class="tab-btn"
+              :class="{ active: activeTab === 1 }"
+              @click="setTab(1)"
+              title="Критерии и оценка"
+            >
+              <svg
+                class="tab-icon"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path
+                  d="M9 5H7a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"
+                />
+                <rect x="9" y="3" width="6" height="4" rx="1" />
+                <line x1="9" y1="12" x2="15" y2="12" />
+                <line x1="9" y1="16" x2="15" y2="16" />
+              </svg>
+            </button>
+            <button
+              type="button"
+              class="tab-btn"
+              :class="{ active: activeTab === 2 }"
+              @click="setTab(2)"
+              title="Честные вопросы о партнёре"
+            >
+              <svg
+                class="tab-icon"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path
+                  d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"
+                />
+              </svg>
+            </button>
+          </div>
         </div>
-        <div class="tabs">
-          <button
+
+        <div class="options-container">
+          <!-- <button
             type="button"
-            class="tab-btn"
-            :class="{ active: activeTab === 1 }"
-            @click="setTab(1)"
-            title="Критерии и оценка"
+            class="feedback-btn"
+            @click="openFeedbackModal"
+            title="Обратная связь"
           >
             <svg
               class="tab-icon"
@@ -356,19 +558,17 @@ const hasFormData = computed(
               stroke-linejoin="round"
             >
               <path
-                d="M9 5H7a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"
+                d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"
               />
-              <rect x="9" y="3" width="6" height="4" rx="1" />
-              <line x1="9" y1="12" x2="15" y2="12" />
-              <line x1="9" y1="16" x2="15" y2="16" />
+              <polyline points="22,6 12,13 2,6" />
             </svg>
-          </button>
+          </button> -->
           <button
             type="button"
-            class="tab-btn"
-            :class="{ active: activeTab === 2 }"
-            @click="setTab(2)"
-            title="Честные вопросы о партнёре"
+            class="reset-all-btn"
+            :disabled="!hasFormData"
+            @click="resetAllForms"
+            title="Сбросить все формы"
           >
             <svg
               class="tab-icon"
@@ -379,33 +579,52 @@ const hasFormData = computed(
               stroke-linecap="round"
               stroke-linejoin="round"
             >
-              <path
-                d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"
-              />
+              <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+              <path d="M3 3v5h5" />
             </svg>
           </button>
         </div>
-        <button
-          type="button"
-          class="reset-all-btn"
-          :disabled="!hasFormData"
-          @click="resetAllForms"
-          title="Сбросить все формы"
-        >
-          <svg
-            class="tab-icon"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          >
-            <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
-            <path d="M3 3v5h5" />
-          </svg>
-        </button>
       </div>
+
+      <Teleport to="body">
+        <div
+          v-if="showFeedbackModal"
+          class="feedback-overlay"
+          @click.self="closeFeedbackModal"
+        >
+          <div class="feedback-modal">
+            <h3 class="feedback-title">Обратная связь</h3>
+            <div v-if="feedbackError" class="alert alert-danger feedback-alert">
+              <span class="alert-icon">❌</span>
+              {{ feedbackError }}
+            </div>
+            <textarea
+              v-model="feedbackText"
+              class="feedback-textarea"
+              placeholder="Напишите отзыв, предложение или сообщение об ошибке..."
+              :disabled="feedbackSending"
+            />
+            <div class="feedback-actions">
+              <button
+                type="button"
+                class="btn-secondary"
+                :disabled="feedbackSending"
+                @click="closeFeedbackModal"
+              >
+                Закрыть
+              </button>
+              <button
+                type="button"
+                class="btn-primary"
+                :disabled="feedbackSending"
+                @click="sendFeedback"
+              >
+                {{ feedbackSending ? "Отправляю..." : "Отправить" }}
+              </button>
+            </div>
+          </div>
+        </div>
+      </Teleport>
 
       <template v-if="activeTab === 1">
         <div class="card table-card">
@@ -448,7 +667,8 @@ const hasFormData = computed(
             <div class="result-item">
               <span class="label">Сумма баллов</span>
               <span class="value"
-                >{{ analysis.total }}<span class="max">/100</span></span
+                >{{ analysis.total
+                }}<span class="max">/{{ criteria.length * 10 }}</span></span
               >
             </div>
             <div class="result-item">
@@ -511,7 +731,7 @@ const hasFormData = computed(
             :key="'g-' + i"
             class="form-item"
           >
-            <p class="form-question">{{ q }}</p>
+            <p class="form-question">{{ q.text }}</p>
             <div class="form-options">
               <button
                 type="button"
@@ -519,7 +739,7 @@ const hasFormData = computed(
                 :class="{ active: girlFormAnswers[i] === 1 }"
                 @click="setGirlAnswer(i, 1)"
               >
-                Да
+                {{ q.options[0] }}
               </button>
               <button
                 type="button"
@@ -527,7 +747,7 @@ const hasFormData = computed(
                 :class="{ active: girlFormAnswers[i] === 0 }"
                 @click="setGirlAnswer(i, 0)"
               >
-                Не знаю
+                {{ q.options[1] }}
               </button>
               <button
                 type="button"
@@ -535,7 +755,7 @@ const hasFormData = computed(
                 :class="{ active: girlFormAnswers[i] === -1 }"
                 @click="setGirlAnswer(i, -1)"
               >
-                Нет
+                {{ q.options[2] }}
               </button>
             </div>
           </div>
@@ -583,7 +803,7 @@ const hasFormData = computed(
             :key="'b-' + i"
             class="form-item"
           >
-            <p class="form-question">{{ q }}</p>
+            <p class="form-question">{{ q.text }}</p>
             <div class="form-options">
               <button
                 type="button"
@@ -591,7 +811,7 @@ const hasFormData = computed(
                 :class="{ active: boyFormAnswers[i] === 1 }"
                 @click="setBoyAnswer(i, 1)"
               >
-                Да
+                {{ q.options[0] }}
               </button>
               <button
                 type="button"
@@ -599,7 +819,7 @@ const hasFormData = computed(
                 :class="{ active: boyFormAnswers[i] === 0 }"
                 @click="setBoyAnswer(i, 0)"
               >
-                Не знаю
+                {{ q.options[1] }}
               </button>
               <button
                 type="button"
@@ -607,7 +827,7 @@ const hasFormData = computed(
                 :class="{ active: boyFormAnswers[i] === -1 }"
                 @click="setBoyAnswer(i, -1)"
               >
-                Нет
+                {{ q.options[2] }}
               </button>
             </div>
           </div>
@@ -731,9 +951,16 @@ body {
 .tabs-row {
   display: flex;
   align-items: center;
-  justify-content: flex-start;
+  justify-content: space-between;
   gap: 1rem;
   margin-bottom: 1.5rem;
+}
+
+.tabs-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
 }
 
 .tabs {
@@ -790,12 +1017,36 @@ body {
   flex-shrink: 0;
 }
 
+.feedback-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: auto;
+  padding: 0.5rem 1rem;
+  background: var(--bg-card);
+  border: 1px solid var(--teal);
+  border-radius: 10px;
+  color: var(--teal);
+  cursor: pointer;
+  transition: color 0.2s, border-color 0.2s, background 0.2s;
+  -webkit-appearance: none;
+  appearance: none;
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.feedback-btn:hover {
+  background: var(--teal-dim);
+  border-color: var(--teal);
+  color: var(--teal);
+}
+
 .reset-all-btn {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  margin-left: auto;
+  margin-left: 0.5rem;
   padding: 0.5rem 1rem;
   background: var(--bg-card);
   border: 1px solid var(--reset-pink);
@@ -822,6 +1073,96 @@ body {
   color: var(--reset-pink-disabled);
   opacity: 0.8;
   cursor: not-allowed;
+}
+
+.feedback-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: rgba(9, 9, 11, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  box-sizing: border-box;
+}
+
+.feedback-modal {
+  width: 100%;
+  height: 100%;
+  max-width: 700px;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+}
+
+.feedback-title {
+  font-size: 1.25rem;
+  margin-bottom: 0.25rem;
+  color: var(--text);
+}
+
+.feedback-alert {
+  margin-bottom: 1rem;
+}
+
+.feedback-textarea {
+  flex: 1;
+  width: 100%;
+  min-height: 280px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  background: var(--bg-dark);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text);
+  font-family: inherit;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  resize: none;
+  box-sizing: border-box;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.feedback-textarea::placeholder {
+  color: var(--text-dim);
+}
+
+.feedback-textarea:focus {
+  outline: none;
+  border-color: var(--teal);
+  box-shadow: 0 0 0 2px var(--teal-dim);
+}
+
+.feedback-actions {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: flex-end;
+}
+
+.btn-secondary {
+  padding: 0.6rem 1.2rem;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text);
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: border-color 0.2s, color 0.2s;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.btn-secondary:hover {
+  border-color: var(--teal);
+  color: var(--teal);
 }
 
 .gender-switch {
