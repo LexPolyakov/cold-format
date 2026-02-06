@@ -1308,7 +1308,7 @@ h1 .by {
 }
 
 h1 {
-  font-size: 1.5rem;
+  font-size: 20px;
   font-weight: 700;
   background: linear-gradient(135deg, #2dd4bf 0%, #5eead4 50%, #2dd4bf 100%);
   -webkit-background-clip: text;
