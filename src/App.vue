@@ -9,7 +9,7 @@ import {
 } from "./composables/useScale";
 
 const gender = ref<Gender>("female");
-const activeTab = ref(1);
+const activeTab = ref(2);
 const criteria = computed(() => getCriteria(gender.value));
 
 interface FormQuestion {
@@ -219,6 +219,7 @@ function setScore(i: number, e: Event) {
 function setGender(value: Gender) {
   if (gender.value === value) return;
   gender.value = value;
+  activeTab.value = value === "female" ? 2 : 1;
   resetAllForms();
 }
 
@@ -450,7 +451,7 @@ async function sendFeedback() {
           <div class="gender-switch">
             <button
               type="button"
-              class="gender-btn"
+              class="gender-btn girls-mode"
               :class="{ active: gender === 'female' }"
               @click="setGender('female')"
               title="Женский"
@@ -492,7 +493,7 @@ async function sendFeedback() {
               </svg>
             </button>
           </div>
-          <div class="tabs">
+          <div class="tabs" :class="{ 'girls-mode': gender === 'female' }">
             <button
               type="button"
               class="tab-btn"
@@ -885,9 +886,9 @@ async function sendFeedback() {
   --teal: #2dd4bf;
   --teal-dim: rgba(45, 212, 191, 0.15);
   --teal-glow: rgba(45, 212, 191, 0.4);
-  --reset-pink: #e02f7d;
-  --reset-pink-dim: rgba(224, 47, 125, 0.2);
-  --reset-pink-disabled: #f7a8b8;
+  --reset-pink: #b57d8a;
+  --reset-pink-dim: rgba(181, 125, 138, 0.25);
+  --reset-pink-disabled: #c9a8b0;
   --bg-dark: #09090b;
   --bg-card: rgba(20, 20, 22, 0.9);
   --border: rgba(45, 212, 191, 0.15);
@@ -972,9 +973,9 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 44px;
+  width: 52px;
   height: 44px;
-  min-width: 44px;
+  min-width: 52px;
   min-height: 44px;
   padding: 0;
   margin: 0;
@@ -1008,6 +1009,16 @@ body {
 .tab-btn:not(.active):hover {
   border-color: rgba(45, 212, 191, 0.35);
   color: var(--text);
+}
+
+.tabs.girls-mode .tab-btn.active {
+  background: var(--reset-pink-dim);
+  border-color: var(--reset-pink);
+  color: var(--reset-pink);
+}
+
+.tabs.girls-mode .tab-btn:not(.active):hover {
+  border-color: var(--reset-pink-dim);
 }
 
 .tab-icon {
@@ -1049,9 +1060,9 @@ body {
   margin-left: 0.5rem;
   padding: 0.5rem 1rem;
   background: var(--bg-card);
-  border: 1px solid var(--reset-pink);
+  border: 1px solid #fff;
   border-radius: 10px;
-  color: var(--reset-pink);
+  color: #fff;
   font-size: 0.85rem;
   font-weight: 500;
   cursor: pointer;
@@ -1063,14 +1074,14 @@ body {
 }
 
 .reset-all-btn:hover:not(:disabled) {
-  background: var(--reset-pink-dim);
-  border-color: var(--reset-pink);
-  color: var(--reset-pink);
+  background: #fff;
+  border-color: #fff;
+  color: #fff;
 }
 
 .reset-all-btn:disabled {
-  border-color: var(--reset-pink-disabled);
-  color: var(--reset-pink-disabled);
+  border-color: rgba(255, 255, 255, 0.5);
+  color: rgba(255, 255, 255, 0.5);
   opacity: 0.8;
   cursor: not-allowed;
 }
@@ -1263,9 +1274,24 @@ body {
   color: var(--teal);
 }
 
+.girls-mode {
+  background: var(--bg-card);
+  border-color: var(--reset-pink);
+  color: var(--reset-pink);
+}
+.girls-mode.active {
+  background: var(--reset-pink-dim);
+  border-color: var(--reset-pink);
+  color: var(--reset-pink);
+}
+
 .gender-btn:not(.active):hover {
   border-color: rgba(45, 212, 191, 0.35);
   color: var(--text);
+}
+
+.girls-mode:not(.active):hover {
+  border-color: var(--reset-pink-dim);
 }
 
 .gender-icon {
@@ -1275,10 +1301,6 @@ body {
   flex-shrink: 0;
 }
 
-/* .gender-btn.active .gender-symbol.female {
-  color: #ec4899;
-} */
-
 h1 .by {
   font-size: 0.4em;
   font-weight: 400;
@@ -1286,7 +1308,7 @@ h1 .by {
 }
 
 h1 {
-  font-size: 2.5rem;
+  font-size: 1.5rem;
   font-weight: 700;
   background: linear-gradient(135deg, #2dd4bf 0%, #5eead4 50%, #2dd4bf 100%);
   -webkit-background-clip: text;
