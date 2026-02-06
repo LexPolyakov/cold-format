@@ -1308,7 +1308,7 @@ h1 .by {
 }
 
 h1 {
-  font-size: 20px;
+  font-size: 2.5rem;
   font-weight: 700;
   background: linear-gradient(135deg, #2dd4bf 0%, #5eead4 50%, #2dd4bf 100%);
   -webkit-background-clip: text;
@@ -1582,7 +1582,7 @@ tr:hover {
 
 @media (max-width: 640px) {
   h1 {
-    font-size: 1.75rem;
+    font-size: 1.5rem;
   }
   .col-value {
     width: 80px;
