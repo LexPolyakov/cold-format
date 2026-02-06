@@ -1276,8 +1276,8 @@ body {
 
 .girls-mode {
   background: var(--bg-card);
-  border-color: var(--reset-pink);
-  color: var(--reset-pink);
+  border-radius: 10px;
+  color: var(--text-dim);
 }
 .girls-mode.active {
   background: var(--reset-pink-dim);
