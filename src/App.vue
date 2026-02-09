@@ -9,7 +9,7 @@ import {
 } from "./composables/useScale";
 
 const gender = ref<Gender>("female");
-const activeTab = ref(2);
+const activeTab = ref(1);
 const criteria = computed(() => getCriteria(gender.value));
 
 interface FormQuestion {
@@ -219,7 +219,7 @@ function setScore(i: number, e: Event) {
 function setGender(value: Gender) {
   if (gender.value === value) return;
   gender.value = value;
-  activeTab.value = value === "female" ? 2 : 1;
+  // activeTab.value = value === "female" ? 2 : 1;
   resetAllForms();
 }
 
