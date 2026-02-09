@@ -2,130 +2,18 @@
 import { ref, computed, nextTick } from "vue";
 import {
   getCriteria,
+  getFormQuestions,
   analyzeScores,
   buildPrompt,
   type AnalysisResult,
+  type FormQuestion,
   type Gender,
 } from "./composables/useScale";
 
 const gender = ref<Gender>("female");
 const activeTab = ref(1);
 const criteria = computed(() => getCriteria(gender.value));
-
-interface FormQuestion {
-  text: string;
-  options: [string, string, string]; // положительный (1), нейтральный (0), отрицательный (-1)
-}
-
-const girlFormQuestions: FormQuestion[] = [
-  {
-    text: "Моё нахождение в этих отношениях — это осознанный ежедневный выбор или привычка и рутина?",
-    options: ["Выбор", "Не знаю", "Привычка"],
-  },
-  {
-    text: "Вижу ли я этого человека отцом своих будущих детей (в перспективе)?",
-    options: ["Да", "Не знаю", "Нет"],
-  },
-  {
-    text: "Если представить, что он не изменится ни на грамм, я всё равно хочу быть с ним до конца жизни?",
-    options: ["Да", "Не знаю", "Нет"],
-  },
-  {
-    text: "Что я чувствую рядом с ним чаще всего?",
-    options: [
-      "Спокойствие и безопасность",
-      "Затрудняюсь ответить",
-      "Напряжение и тревогу",
-    ],
-  },
-  {
-    text: "В наших отношениях я чувствую поддержку и плечо рядом или мне приходится «тащить всё на себе»?",
-    options: ["Поддержку", "Не знаю", "Тащу на себе"],
-  },
-  {
-    text: "Могу ли я быть рядом с ним полностью собой, не играя роли?",
-    options: ["Да", "Частично", "Нет"],
-  },
-  {
-    text: "Расту ли я как личность в этих отношениях (развиваюсь, узнаю новое, становлюсь лучше)?",
-    options: [
-      "Да",
-      "Отношения не влияют на рост",
-      "Нет, я деградирую или стою на месте",
-    ],
-  },
-  {
-    text: "Если бы у меня была дочь, желала бы я для неё таких же отношений с таким партнёром?",
-    options: ["Да", "Не знаю", "Нет"],
-  },
-  {
-    text: "Уважаю ли я этого человека (его ум, поступки, жизненную позицию)?",
-    options: ["Да", "Не знаю", "Нет"],
-  },
-  {
-    text: "Поддерживает ли он мои цели и мечты, радуется ли моим успехам?",
-    options: ["Да", "Иногда", "Нет"],
-  },
-  {
-    text: "Если бы завтра исчезли все внешние обстоятельства (страх одиночества, общий быт, мнение окружающих), выбрала бы я его снова?",
-    options: ["Да, однозначно", "Не знаю", "Нет"],
-  },
-];
-
-const boyFormQuestions: FormQuestion[] = [
-  {
-    text: "Моё нахождение в этих отношениях — это осознанный ежедневный выбор или привычка и рутина?",
-    options: ["Выбор", "Не знаю", "Привычка"],
-  },
-  {
-    text: "Вижу ли я эту женщину матерью своих будущих детей (в перспективе)?",
-    options: ["Да", "Не знаю", "Нет"],
-  },
-  {
-    text: "Если представить, что она не изменится ни на грамм, я всё равно хочу быть с ней до конца жизни?",
-    options: ["Да", "Не знаю", "Нет"],
-  },
-  {
-    text: "Что я чувствую рядом с ней чаще всего?",
-    options: [
-      "Ресурс и спокойствие",
-      "Затрудняюсь ответить",
-      "Напряжение и тревогу",
-    ],
-  },
-  {
-    text: "В наших отношениях я чувствую поддержку и плечо рядом или мне приходится «тащить всё на себе»?",
-    options: ["Поддержку", "Не знаю", "Тащу на себе"],
-  },
-  {
-    text: "Могу ли я быть рядом с ней полностью собой, не играя роли?",
-    options: ["Да", "Частично", "Нет"],
-  },
-  {
-    text: "Расту ли я как личность в этих отношениях (развиваюсь, узнаю новое, становлюсь лучше)?",
-    options: [
-      "Да",
-      "Отношения не влияют на рост",
-      "Нет, деградирую или стою на месте",
-    ],
-  },
-  {
-    text: "Если бы у меня был сын, желал бы я для него таких же отношений с такой партнёршей?",
-    options: ["Да", "Не знаю", "Нет"],
-  },
-  {
-    text: "Уважаю ли я эту женщину (её ум, поступки, жизненную позицию)?",
-    options: ["Да", "Не знаю", "Нет"],
-  },
-  {
-    text: "Поддерживает ли она мои цели и мечты, радуется ли моим успехам?",
-    options: ["Да", "Иногда", "Нет"],
-  },
-  {
-    text: "Если бы завтра исчезли все внешние обстоятельства (страх одиночества, общий быт, мнение окружающих), выбрал бы я её снова?",
-    options: ["Да, однозначно", "Не знаю", "Нет"],
-  },
-];
+const formQuestions = computed(() => getFormQuestions(gender.value));
 
 type FormAnswer = 1 | 0 | -1 | null; // Да, Не знаю, Нет
 const girlFormAnswers = ref<FormAnswer[]>(Array(11).fill(null));
@@ -167,11 +55,18 @@ async function getAIAnalysis() {
               : "localhost"
           }:3001`
         : "");
+
+    let genderValue = gender.value;
+
+    if (activeTab.value === 2) {
+      genderValue = gender.value === "male" ? "female" : "male";
+    }
+
     const res = await fetch(`${apiUrl}/api/analyze`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        prompt: buildPrompt(scores.value, analysis.value, gender.value),
+        prompt: buildPrompt(scores.value, analysis.value, genderValue),
       }),
     });
 
@@ -254,21 +149,22 @@ function setBoyAnswer(i: number, value: FormAnswer) {
 const formAnswerLabel = (v: FormAnswer) =>
   v === 1 ? "Да" : v === 0 ? "Не знаю" : v === -1 ? "Нет" : "—";
 
-function getGirlOptionLabel(i: number, v: FormAnswer): string {
+function getOptionLabel(i: number, v: FormAnswer): string {
   if (v === null) return "—";
-  const o = girlFormQuestions[i].options;
+  const o = formQuestions.value[i].options;
   return v === 1 ? o[0] : v === 0 ? o[1] : o[2];
 }
 
-function buildGirlPrompt(): string {
-  const lines = girlFormQuestions.map(
+function buildFormPrompt(answers: FormAnswer[], formLabel: string): string {
+  const lines = formQuestions.value.map(
     (q, i) =>
-      `${i + 1}. ${q.text}\n   Ответ: ${getGirlOptionLabel(
-        i,
-        girlFormAnswers.value[i]
-      )}`
+      `${i + 1}. ${q.text}\n   Ответ: ${getOptionLabel(i, answers[i])}`
   );
-  return `Рефлексия по отношениям (форма для девочек). Ответы на вопросы:
+  const isMale = formLabel.includes("мальчиков");
+  const rec = isMale
+    ? "обсудить с партнёршей или проработать самому"
+    : "обсудить с партнёром или проработать самой";
+  return `Рефлексия по отношениям (${formLabel}). Ответы на вопросы:
 
 ${lines.join("\n\n")}
 
@@ -277,7 +173,7 @@ ${lines.join("\n\n")}
 2. Сильные стороны: где ответы «Да» и что это значит.
 3. Зоны риска: «Нет» и «Не знаю» — на что обратить внимание, возможные причины.
 4. Зависимость vs любовь: как соотносятся ответы с честной привязанностью.
-5. Рекомендации: что имеет смысл обсудить с партнёром или проработать самой.`;
+5. Рекомендации: что имеет смысл ${rec}.`;
 }
 
 async function getGirlFormAnalysis() {
@@ -298,7 +194,7 @@ async function getGirlFormAnalysis() {
     const res = await fetch(`${apiUrl}/api/analyze`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ prompt: buildGirlPrompt() }),
+      body: JSON.stringify({ prompt: buildFormPrompt(girlFormAnswers.value, "форма для девочек") }),
     });
 
     if (!res.ok) throw new Error(`Ошибка сервера: ${res.status}`);
@@ -319,32 +215,6 @@ const girlFormHasAnswers = computed(() =>
   girlFormAnswers.value.some((a) => a !== null)
 );
 
-function getBoyOptionLabel(i: number, v: FormAnswer): string {
-  if (v === null) return "—";
-  const o = boyFormQuestions[i].options;
-  return v === 1 ? o[0] : v === 0 ? o[1] : o[2];
-}
-
-function buildBoyPrompt(): string {
-  const lines = boyFormQuestions.map(
-    (q, i) =>
-      `${i + 1}. ${q.text}\n   Ответ: ${getBoyOptionLabel(
-        i,
-        boyFormAnswers.value[i]
-      )}`
-  );
-  return `Рефлексия по отношениям (форма для мальчиков). Ответы на вопросы:
-
-${lines.join("\n\n")}
-
-Дай развёрнутый анализ (4–6 абзацев):
-1. Общая картина: что говорят ответы о качестве отношений и твоём состоянии.
-2. Сильные стороны: где ответы «Да» и что это значит.
-3. Зоны риска: «Нет» и «Не знаю» — на что обратить внимание, возможные причины.
-4. Зависимость vs любовь: как соотносятся ответы с честной привязанностью.
-5. Рекомендации: что имеет смысл обсудить с партнёршей или проработать самому.`;
-}
-
 async function getBoyFormAnalysis() {
   boyIsLoading.value = true;
   boyError.value = "";
@@ -363,7 +233,7 @@ async function getBoyFormAnalysis() {
     const res = await fetch(`${apiUrl}/api/analyze`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ prompt: buildBoyPrompt() }),
+      body: JSON.stringify({ prompt: buildFormPrompt(boyFormAnswers.value, "форма для мальчиков") }),
     });
 
     if (!res.ok) throw new Error(`Ошибка сервера: ${res.status}`);
@@ -728,7 +598,7 @@ async function sendFeedback() {
         <div v-if="gender === 'female'" class="card form-card">
           <p class="form-intro">Честные вопросы себе о партнёре</p>
           <div
-            v-for="(q, i) in girlFormQuestions"
+            v-for="(q, i) in formQuestions"
             :key="'g-' + i"
             class="form-item"
           >
@@ -800,7 +670,7 @@ async function sendFeedback() {
         <div v-if="gender === 'male'" class="card form-card">
           <p class="form-intro">Честные вопросы себе о партнёрше</p>
           <div
-            v-for="(q, i) in boyFormQuestions"
+            v-for="(q, i) in formQuestions"
             :key="'b-' + i"
             class="form-item"
           >
