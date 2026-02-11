@@ -12,6 +12,7 @@ import {
 
 const gender = ref<Gender>("female");
 const activeTab = ref(1);
+const formIntroHighlight = ref(false);
 const criteria = computed(() => getCriteria(gender.value));
 const formQuestions = computed(() => getFormQuestions(gender.value));
 
@@ -124,6 +125,8 @@ function setTab(n: number) {
   error.value = "";
   girlError.value = "";
   boyError.value = "";
+  formIntroHighlight.value = true;
+  setTimeout(() => (formIntroHighlight.value = false), 3000);
 }
 
 function resetAllForms() {
@@ -157,8 +160,7 @@ function getOptionLabel(i: number, v: FormAnswer): string {
 
 function buildFormPrompt(answers: FormAnswer[], formLabel: string): string {
   const lines = formQuestions.value.map(
-    (q, i) =>
-      `${i + 1}. ${q.text}\n   Ответ: ${getOptionLabel(i, answers[i])}`
+    (q, i) => `${i + 1}. ${q.text}\n   Ответ: ${getOptionLabel(i, answers[i])}`
   );
   const isMale = formLabel.includes("мальчиков");
   const rec = isMale
@@ -194,7 +196,9 @@ async function getGirlFormAnalysis() {
     const res = await fetch(`${apiUrl}/api/analyze`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ prompt: buildFormPrompt(girlFormAnswers.value, "форма для девочек") }),
+      body: JSON.stringify({
+        prompt: buildFormPrompt(girlFormAnswers.value, "форма для девочек"),
+      }),
     });
 
     if (!res.ok) throw new Error(`Ошибка сервера: ${res.status}`);
@@ -233,7 +237,9 @@ async function getBoyFormAnalysis() {
     const res = await fetch(`${apiUrl}/api/analyze`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ prompt: buildFormPrompt(boyFormAnswers.value, "форма для мальчиков") }),
+      body: JSON.stringify({
+        prompt: buildFormPrompt(boyFormAnswers.value, "форма для мальчиков"),
+      }),
     });
 
     if (!res.ok) throw new Error(`Ошибка сервера: ${res.status}`);
@@ -499,8 +505,10 @@ async function sendFeedback() {
 
       <template v-if="activeTab === 1">
         <div class="card table-card">
-          <p class="form-intro">
-            Проставь баллы от 0 до 10 по каждому критерию
+          <p class="form-intro" :class="{ 'form-intro-highlight': formIntroHighlight }">По каждому критерию — балл от 0 до 10</p>
+          <p class="form-intro" :class="{ 'form-intro-highlight': formIntroHighlight }">
+            Честная оценка даёт ясную картину и помогает принять решение о
+            партнёре без иллюзий
           </p>
           <table>
             <thead>
@@ -596,7 +604,11 @@ async function sendFeedback() {
 
       <template v-if="activeTab === 2">
         <div v-if="gender === 'female'" class="card form-card">
-          <p class="form-intro">Честные вопросы себе о партнёре</p>
+          <p class="form-intro" :class="{ 'form-intro-highlight': formIntroHighlight }">Ответь на каждый вопрос (Да / Не знаю / Нет)</p>
+          <p class="form-intro" :class="{ 'form-intro-highlight': formIntroHighlight }">
+            Рефлексия помогает отделить привычку от осознанного выбора и увидеть
+            реальное состояние отношений
+          </p>
           <div
             v-for="(q, i) in formQuestions"
             :key="'g-' + i"
@@ -668,7 +680,11 @@ async function sendFeedback() {
         </div>
 
         <div v-if="gender === 'male'" class="card form-card">
-          <p class="form-intro">Честные вопросы себе о партнёрше</p>
+          <p class="form-intro" :class="{ 'form-intro-highlight': formIntroHighlight }">Ответь на каждый вопрос (Да / Не знаю / Нет)</p>
+          <p class="form-intro" :class="{ 'form-intro-highlight': formIntroHighlight }">
+            Рефлексия помогает отделить привычку от осознанного выбора и увидеть
+            реальное состояние отношений
+          </p>
           <div
             v-for="(q, i) in formQuestions"
             :key="'b-' + i"
@@ -1059,7 +1075,12 @@ body {
   text-align: center;
   color: var(--text-dim);
   font-size: 0.9rem;
-  margin-bottom: 1.5rem;
+  margin-bottom: 4px;
+}
+
+.form-intro.form-intro-highlight {
+  color: var(--teal);
+  transition: color 0.2s ease;
 }
 
 .form-item {

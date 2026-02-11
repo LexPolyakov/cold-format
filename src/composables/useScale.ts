@@ -108,7 +108,7 @@ export function analyzeScores(scores: number[], gender: Gender): AnalysisResult 
   const total = usedScores.reduce((sum, s) => sum + s, 0)
   const redFlags: string[] = []
   const categories = gender === 'male' ? categoriesMale : categoriesFemale
-  const unfitLabel = gender === 'male' ? 'Непригоден' : 'Непригодна'
+  const unfitLabel = gender === 'male' ? 'Непригодна' : 'Непригоден'
 
   const labelP3 = gender === 'male' ? 'Быту и соучастию (п.3)' : 'Участию в быту (п.3)'
   const isPenalized = (scores[0] ?? 0) < 4 || (scores[2] ?? 0) < 4
